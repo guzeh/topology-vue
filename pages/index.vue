@@ -51,6 +51,18 @@ export default {
   components: {
     CanvasProps
   },
+  computed: {
+    event() {
+      return this.$store.state.event.event
+    }
+  },
+  watch: {
+    event(curVal) {
+      if (this['handle_' + curVal.name]) {
+        this['handle_' + curVal.name](curVal.data)
+      }
+    }
+  },
   created() {
     canvasRegister()
   },
@@ -62,6 +74,7 @@ export default {
     onDrag(event, node) {
       event.dataTransfer.setData('Text', JSON.stringify(node.data))
     },
+
     onMessage(event, data) {
       switch (event) {
         case 'node':
@@ -115,13 +128,166 @@ export default {
         case 'resize':
         case 'scale':
         case 'locked':
-          if (this.canvas) {
+          if (this.canvas && this.canvas.data) {
+            this.$store.commit('canvas/data', {
+              scale: this.canvas.data.scale || 1,
+              lineName: this.canvas.data.lineName,
+              fromArrowType: this.canvas.data.fromArrowType,
+              toArrowType: this.canvas.data.toArrowType,
+              fromArrowlockedType: this.canvas.data.locked
+            })
           }
           break
       }
     },
+
     onUpdateProps(node) {
+      // 如果是node属性改变，需要传入node，重新计算node相关属性值
+      // 如果是line属性改变，无需传参
       this.canvas.updateProps(node)
+    },
+
+    handle_new(data) {
+      this.canvas.open({ nodes: [], lines: [] })
+    },
+
+    handle_open(data) {
+      this.handle_replace(data)
+    },
+
+    handle_replace(data) {
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.onchange = event => {
+        const elem = event.srcElement || event.target
+        if (elem.files && elem.files[0]) {
+          const name = elem.files[0].name.replace('.json', '')
+          const reader = new FileReader()
+          reader.onload = e => {
+            const text = e.target.result + ''
+            try {
+              const data = JSON.parse(text)
+              if (
+                data &&
+                Array.isArray(data.nodes) &&
+                Array.isArray(data.lines)
+              ) {
+                this.canvas.open(data)
+              }
+            } catch (e) {
+              return false
+            }
+          }
+          reader.readAsText(elem.files[0])
+        }
+      }
+      input.click()
+    },
+
+    handle_save(data) {
+      FileSaver.saveAs(
+        new Blob([JSON.stringify(this.canvas.data)], {
+          type: 'text/plain;charset=utf-8'
+        }),
+        `le5le.topology.json`
+      )
+    },
+
+    handle_savePng(data) {
+      this.canvas.saveAsImage('le5le.topology.png')
+    },
+
+    handle_saveSvg(data) {
+      const ctx = new C2S(
+        this.canvas.canvas.width + 200,
+        this.canvas.canvas.height + 200
+      )
+      for (const item of this.canvas.data.nodes) {
+        item.render(ctx)
+      }
+
+      for (const item of this.canvas.data.lines) {
+        item.render(ctx)
+      }
+
+      let mySerializedSVG = ctx.getSerializedSvg()
+      mySerializedSVG = mySerializedSVG.replace(
+        '<defs/>',
+        `<defs>
+    <style type="text/css">
+      @font-face {
+        font-family: 'topology';
+        src: url('http://at.alicdn.com/t/font_1331132_h688rvffmbc.ttf?t=1569311680797') format('truetype');
+      }
+    </style>
+  </defs>`
+      )
+
+      mySerializedSVG = mySerializedSVG.replace(/--le5le--/g, '&#x')
+
+      const urlObject = window.URL || window
+      const export_blob = new Blob([mySerializedSVG])
+      const url = urlObject.createObjectURL(export_blob)
+
+      const a = document.createElement('a')
+      a.setAttribute('download', 'le5le.topology.svg')
+      a.setAttribute('href', url)
+      const evt = document.createEvent('MouseEvents')
+      evt.initEvent('click', true, true)
+      a.dispatchEvent(evt)
+    },
+
+    handle_undo(data) {
+      this.canvas.undo()
+    },
+
+    handle_redo(data) {
+      this.canvas.redo()
+    },
+
+    handle_copy(data) {
+      this.canvas.copy()
+    },
+
+    handle_cut(data) {
+      this.canvas.cut()
+    },
+
+    handle_parse(data) {
+      this.canvas.parse()
+    },
+
+    handle_curve(data) {
+      this.canvas.data.lineName = 'curve'
+      this.$store.commit('canvas/data', {
+        scale: this.canvas.data.scale || 1,
+        lineName: this.canvas.data.lineName,
+        fromArrowType: this.canvas.data.fromArrowType,
+        toArrowType: this.canvas.data.toArrowType,
+        fromArrowlockedType: this.canvas.data.locked
+      })
+    },
+
+    handle_polyline(data) {
+      this.canvas.data.lineName = 'polyline'
+      this.$store.commit('canvas/data', {
+        scale: this.canvas.data.scale || 1,
+        lineName: this.canvas.data.lineName,
+        fromArrowType: this.canvas.data.fromArrowType,
+        toArrowType: this.canvas.data.toArrowType,
+        fromArrowlockedType: this.canvas.data.locked
+      })
+    },
+
+    handle_line(data) {
+      this.canvas.data.lineName = 'line'
+      this.$store.commit('canvas/data', {
+        scale: this.canvas.data.scale || 1,
+        lineName: this.canvas.data.lineName,
+        fromArrowType: this.canvas.data.fromArrowType,
+        toArrowType: this.canvas.data.toArrowType,
+        fromArrowlockedType: this.canvas.data.locked
+      })
     }
   }
 }

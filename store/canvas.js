@@ -1,9 +1,15 @@
 export const state = () => ({
-  data: {}
+  data: {
+    scale: 1,
+    lineName: 'curve',
+    fromArrowType: '',
+    toArrowType: 'triangleSolid',
+    locked: 0
+  }
 })
 
 export const mutations = {
-  set(state, data) {
+  data(state, data) {
     state.data = data
   }
 }

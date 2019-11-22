@@ -1,5 +1,6 @@
 <template>
   <div>
+    <!-- 选中为空 -->
     <div v-if="!props.node && !props.line && !props.multi">
       <div class="title">欢迎使用le5le-topology！</div>
       <div class="group">
@@ -33,6 +34,7 @@
         </ul>
       </div>
     </div>
+    <!-- 选中节点 -->
     <div v-if="props.node">
       <div class="title">位置和大小</div>
       <div class="items">

@@ -1,53 +1,69 @@
 <template>
   <div>
-    <el-menu class="headers" mode="horizontal" @select="onMenu" background-color="#f8f8f8">
-      <el-menu-item class="logo">
-        <nuxt-link to="/">
-          <img src="/favicon.ico" />
-        </nuxt-link>
-      </el-menu-item>
-      <el-submenu index="file">
-        <template slot="title">文件</template>
-        <el-menu-item index="new">新建文件</el-menu-item>
-        <el-menu-item index="open">打开本地文件（新建）</el-menu-item>
-        <el-menu-item index="replace">导入本地文件...</el-menu-item>
-        <el-menu-item class="separator"></el-menu-item>
-        <el-menu-item index="save">保存到本地</el-menu-item>
-        <el-menu-item index="savePng">下载为PNG</el-menu-item>
-        <el-menu-item index="saveSvg">下载为SVG</el-menu-item>
-      </el-submenu>
-      <el-submenu index="edit">
-        <template slot="title">编辑</template>
-        <el-menu-item index="undo">撤消</el-menu-item>
-        <el-menu-item index="redo">重做</el-menu-item>
-        <el-menu-item class="separator"></el-menu-item>
-        <el-menu-item index="copy">复制</el-menu-item>
-        <el-menu-item index="cut">剪切</el-menu-item>
-        <el-menu-item index="parse">粘贴</el-menu-item>
-      </el-submenu>
-      <el-submenu index="share">
-        <template slot="title">社区</template>
-        <el-menu-item index="about">咨询与建议</el-menu-item>
-        <el-menu-item>
-          <a href="https://github.com/le5le-com" target="_blank">开源Github</a>
+    <!-- 顶部导航栏 -->
+    <div class="headers">
+      <el-menu mode="horizontal" @select="onMenu" background-color="#f8f8f8">
+        <el-menu-item class="logo">
+          <nuxt-link to="/">
+            <img src="/favicon.ico" />
+          </nuxt-link>
         </el-menu-item>
-        <el-menu-item>
-          <a href="https://www.yuque.com/alsmile/topology" target="_blank">开发文档</a>
-        </el-menu-item>
-      </el-submenu>
-      <el-submenu index="help">
-        <template slot="title">帮助</template>
-        <el-menu-item>
-          <a href="http://topology.le5le.com" target="_blank">在线官网</a>
-        </el-menu-item>
-        <el-menu-item index="license">许可与申明</el-menu-item>
-        <el-menu-item index="joinin">资助与加入</el-menu-item>
-        <el-menu-item index="about2">关于</el-menu-item>
-      </el-submenu>
-    </el-menu>
+        <el-submenu index="file">
+          <template slot="title">文件</template>
+          <el-menu-item index="new">新建文件</el-menu-item>
+          <el-menu-item index="open">打开本地文件（新建）</el-menu-item>
+          <el-menu-item index="replace">导入本地文件...</el-menu-item>
+          <el-menu-item class="separator"></el-menu-item>
+          <el-menu-item index="save">保存到本地</el-menu-item>
+          <el-menu-item index="savePng">下载为PNG</el-menu-item>
+          <el-menu-item index="saveSvg">下载为SVG</el-menu-item>
+        </el-submenu>
+        <el-submenu index="edit">
+          <template slot="title">编辑</template>
+          <el-menu-item index="undo">撤消</el-menu-item>
+          <el-menu-item index="redo">重做</el-menu-item>
+          <el-menu-item class="separator"></el-menu-item>
+          <el-menu-item index="copy">复制</el-menu-item>
+          <el-menu-item index="cut">剪切</el-menu-item>
+          <el-menu-item index="parse">粘贴</el-menu-item>
+        </el-submenu>
+        <el-submenu index="share">
+          <template slot="title">社区</template>
+          <el-menu-item index="about">咨询与建议</el-menu-item>
+          <el-menu-item>
+            <a href="https://github.com/le5le-com" target="_blank">开源Github</a>
+          </el-menu-item>
+          <el-menu-item>
+            <a href="https://www.yuque.com/alsmile/topology" target="_blank">开发文档</a>
+          </el-menu-item>
+        </el-submenu>
+        <el-submenu index="help">
+          <template slot="title">帮助</template>
+          <el-menu-item>
+            <a href="http://topology.le5le.com" target="_blank">在线官网</a>
+          </el-menu-item>
+          <el-menu-item index="license">许可与申明</el-menu-item>
+          <el-menu-item index="joinin">资助与加入</el-menu-item>
+          <el-menu-item index="about2">关于</el-menu-item>
+        </el-submenu>
+      </el-menu>
+      <el-menu mode="horizontal" class="full" background-color="#f8f8f8"></el-menu>
+      <el-menu mode="horizontal" @select="onMenu" background-color="#f8f8f8">
+        <el-menu-item>视图：{{scale}}%</el-menu-item>
+        <el-submenu index="help">
+          <template slot="title">默认连线类型：{{lineName}}</template>
+          <el-menu-item index="curve">曲线</el-menu-item>
+          <el-menu-item index="polyline">折线</el-menu-item>
+          <el-menu-item index="line">直线</el-menu-item>
+        </el-submenu>
+      </el-menu>
+    </div>
+
+    <!-- body部分 -->
     <div class="body">
       <nuxt />
     </div>
+    <!-- 弹出对话框 -->
     <el-dialog title="关于我们" :visible.sync="about" width="30%">
       <div>
         本项目是
@@ -100,6 +116,19 @@ export default {
       joinin: false
     }
   },
+  computed: {
+    scale() {
+      return Math.floor(this.$store.state.canvas.data.scale * 100)
+    },
+    lineName() {
+      const lineNames = {
+        curve: '曲线',
+        polyline: '折线',
+        line: '直线'
+      }
+      return lineNames[this.$store.state.canvas.data.lineName]
+    }
+  },
   methods: {
     onMenu(key, keyPath) {
       if (!key || key.indexOf('/') === 0) {
@@ -118,6 +147,9 @@ export default {
           this.joinin = true
           break
         default:
+          this.$store.commit('event/emit', {
+            name: key
+          })
           break
       }
     }
@@ -151,8 +183,14 @@ body {
 }
 
 .headers {
+  display: flex;
+  background-color: #f8f8f8;
   font-size: 0.13rem;
   height: 0.4rem;
+
+  .full {
+    flex: 1;
+  }
 
   img {
     height: 0.22rem;
