@@ -156,7 +156,6 @@ export default {
         lineUp:'上单边线箭头',
         lineDown:'下单边线箭头'
       }
-      console.log("toArrowTypes",this.$store.state.canvas.data.toArrowType)
       if(this.$store.state.canvas.data.toArrowType.length==0){
         return  toArrowTypes['noArrow']
       }else {
