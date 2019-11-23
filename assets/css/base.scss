@@ -1,5 +1,9 @@
 a {
   text-decoration: none;
+  color: #314659;
+  &:hover {
+    color: #1890ff;
+  }
 }
 
 .text-center {
@@ -12,6 +16,10 @@ a {
 
 .ml30 {
   margin-left: 0.3rem;
+}
+
+.ml50 {
+  margin-left: 0.5rem;
 }
 
 .mt5 {

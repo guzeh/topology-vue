@@ -16,9 +16,12 @@
         </div>
       </div>
     </div>
-    <div id="topology-canvas" class="full"></div>
+    <div id="topology-canvas" class="full" @contextmenu="onContextMenu($event)"></div>
     <div class="props">
       <CanvasProps :props.sync="props" @change="onUpdateProps"></CanvasProps>
+    </div>
+    <div class="context-menu" v-if="contextmenu.left" :style="this.contextmenu">
+      <CanvasContextMenu :canvas="canvas" :props.sync="props"></CanvasContextMenu>
     </div>
   </div>
 </template>
@@ -32,6 +35,7 @@ import * as FileSaver from 'file-saver'
 import { Tools, canvasRegister } from './canvas.service'
 
 import CanvasProps from '~/components/CanvasProps'
+import CanvasContextMenu from '~/components/CanvasContextMenu'
 
 export default {
   data() {
@@ -44,12 +48,20 @@ export default {
       props: {
         node: null,
         line: null,
-        multi: false
+        nodes: null,
+        multi: false,
+        locked: false
+      },
+      contextmenu: {
+        left: null,
+        top: null,
+        bottom: null
       }
     }
   },
   components: {
-    CanvasProps
+    CanvasProps,
+    CanvasContextMenu
   },
   computed: {
     event() {
@@ -65,6 +77,15 @@ export default {
   },
   created() {
     canvasRegister()
+    if (process.client) {
+      document.onclick = event => {
+        this.contextmenu = {
+          left: null,
+          top: null,
+          bottom: null
+        }
+      }
+    }
   },
   mounted() {
     this.canvasOptions.on = this.onMessage
@@ -82,7 +103,9 @@ export default {
           this.props = {
             node: data,
             line: null,
-            multi: false
+            multi: false,
+            nodes: null,
+            locked: data.locked
           }
           break
         case 'line':
@@ -90,21 +113,27 @@ export default {
           this.props = {
             node: null,
             line: data,
-            multi: false
+            multi: false,
+            nodes: null,
+            locked: data.locked
           }
           break
         case 'multi':
           this.props = {
             node: null,
             line: null,
-            multi: true
+            multi: true,
+            nodes: data.nodes.length > 1 ? data.nodes : null,
+            locked: this.getLocked(data)
           }
           break
         case 'space':
           this.props = {
             node: null,
             line: null,
-            multi: false
+            multi: false,
+            nodes: null,
+            locked: false
           }
           break
         case 'moveOut':
@@ -115,13 +144,17 @@ export default {
             this.props = {
               node: null,
               line: null,
-              multi: true
+              multi: true,
+              nodes: data,
+              locked: this.getLocked({ nodes: data })
             }
           } else {
             this.props = {
               node: data[0],
               line: null,
-              multi: false
+              multi: false,
+              nodes: null,
+              locked: false
             }
           }
           break
@@ -139,6 +172,28 @@ export default {
           }
           break
       }
+    },
+
+    getLocked(data) {
+      let locked = true
+      if (data.nodes && data.nodes.length) {
+        for (const item of data.nodes) {
+          if (!item.locked) {
+            locked = false
+            break
+          }
+        }
+      }
+      if (locked && data.lines) {
+        for (const item of data.lines) {
+          if (!item.locked) {
+            locked = false
+            break
+          }
+        }
+      }
+
+      return locked
     },
 
     onUpdateProps(node) {
@@ -288,6 +343,23 @@ export default {
         toArrowType: this.canvas.data.toArrowType,
         fromArrowlockedType: this.canvas.data.locked
       })
+    },
+
+    onContextMenu(event) {
+      event.preventDefault()
+      event.stopPropagation()
+
+      if (event.clientY + 360 < document.body.clientHeight) {
+        this.contextmenu = {
+          left: event.clientX + 'px',
+          top: event.clientY + 'px'
+        }
+      } else {
+        this.contextmenu = {
+          left: event.clientX + 'px',
+          bottom: document.body.clientHeight - event.clientY + 'px'
+        }
+      }
     }
   }
 }
@@ -354,6 +426,11 @@ export default {
     border-left: 1px solid #d9d9d9;
     overflow-y: auto;
     position: relative;
+  }
+
+  .context-menu {
+    position: fixed;
+    z-index: 10;
   }
 }
 </style>
