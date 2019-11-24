@@ -57,6 +57,21 @@
           <el-menu-item index="line">直线</el-menu-item>
         </el-submenu>
       </el-menu>
+      <el-menu mode="horizontal" @select="onMenu" background-color="#f8f8f8">
+        <el-submenu index="help">
+          <template slot="title">默认终点箭头：{{toArrowType}}</template>
+          <el-menu-item index="noArrow">无箭头</el-menu-item>
+          <el-menu-item index="triangleSolid">实心三角形</el-menu-item>
+          <el-menu-item index="triangle">空心三角形</el-menu-item>
+          <el-menu-item index="diamondSolid">实心菱形</el-menu-item>
+          <el-menu-item index="diamond">空心菱形</el-menu-item>
+          <el-menu-item index="circleSolid">实心圆</el-menu-item>
+          <el-menu-item index="circle">空心圆</el-menu-item>
+          <el-menu-item index="line">线型箭头</el-menu-item>
+          <el-menu-item index="lineUp">上单边线箭头</el-menu-item>
+          <el-menu-item index="lineDown">下单边线箭头</el-menu-item>
+        </el-submenu>
+      </el-menu>
     </div>
 
     <!-- body部分 -->
@@ -127,6 +142,25 @@ export default {
         line: '直线'
       }
       return lineNames[this.$store.state.canvas.data.lineName]
+    },
+    toArrowType() {
+      const toArrowTypes = {
+        noArrow:'无箭头',
+        triangleSolid: '实心三角形',
+        triangle: '空心三角形',
+        diamondSolid: '实心菱形',
+        diamond:'空心菱形',
+        circleSolid:'实心圆',
+        circle:'空心圆',
+        line:'线型箭头',
+        lineUp:'上单边线箭头',
+        lineDown:'下单边线箭头'
+      }
+      if(this.$store.state.canvas.data.toArrowType.length==0){
+        return  toArrowTypes['noArrow']
+      }else {
+        return toArrowTypes[this.$store.state.canvas.data.toArrowType]
+      }
     }
   },
   methods: {

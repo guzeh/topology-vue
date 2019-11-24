@@ -58,7 +58,9 @@ export default {
   },
   watch: {
     event(curVal) {
-      if (this['handle_' + curVal.name]) {
+      if(curVal.name=="noArrow"){
+        this.noArrow(curVal);
+      }else if (this['handle_' + curVal.name]) {
         this['handle_' + curVal.name](curVal.data)
       }
     }
@@ -281,6 +283,99 @@ export default {
 
     handle_line(data) {
       this.canvas.data.lineName = 'line'
+      this.$store.commit('canvas/data', {
+        scale: this.canvas.data.scale || 1,
+        lineName: this.canvas.data.lineName,
+        fromArrowType: this.canvas.data.fromArrowType,
+        toArrowType: this.canvas.data.toArrowType,
+        fromArrowlockedType: this.canvas.data.locked
+      })
+    },
+
+    noArrow(data) {
+      this.canvas.data.toArrowType = '';
+      this.$store.commit('canvas/data', {
+        scale: this.canvas.data.scale || 1,
+        lineName: this.canvas.data.lineName,
+        fromArrowType: this.canvas.data.fromArrowType,
+        toArrowType: this.canvas.data.toArrowType,
+        fromArrowlockedType: this.canvas.data.locked
+      })
+    },
+    handle_triangleSolid(data) {
+      this.canvas.data.toArrowType = 'triangleSolid'
+      this.$store.commit('canvas/data', {
+        scale: this.canvas.data.scale || 1,
+        lineName: this.canvas.data.lineName,
+        fromArrowType: this.canvas.data.fromArrowType,
+        toArrowType: this.canvas.data.toArrowType,
+        fromArrowlockedType: this.canvas.data.locked
+      })
+    },
+    handle_triangle(data) {
+      this.canvas.data.toArrowType = 'triangle'
+      this.$store.commit('canvas/data', {
+        scale: this.canvas.data.scale || 1,
+        lineName: this.canvas.data.lineName,
+        fromArrowType: this.canvas.data.fromArrowType,
+        toArrowType: this.canvas.data.toArrowType,
+        fromArrowlockedType: this.canvas.data.locked
+      })
+    },
+    handle_diamondSolid(data) {
+      this.canvas.data.toArrowType = 'diamondSolid'
+      this.$store.commit('canvas/data', {
+        scale: this.canvas.data.scale || 1,
+        lineName: this.canvas.data.lineName,
+        fromArrowType: this.canvas.data.fromArrowType,
+        toArrowType: this.canvas.data.toArrowType,
+        fromArrowlockedType: this.canvas.data.locked
+      })
+    },
+    handle_diamond(data) {
+      this.canvas.data.toArrowType = 'diamond'
+      this.$store.commit('canvas/data', {
+        scale: this.canvas.data.scale || 1,
+        lineName: this.canvas.data.lineName,
+        fromArrowType: this.canvas.data.fromArrowType,
+        toArrowType: this.canvas.data.toArrowType,
+        fromArrowlockedType: this.canvas.data.locked
+      })
+    },
+    handle_circleSolid(data) {
+      this.canvas.data.toArrowType = 'circleSolid'
+      this.$store.commit('canvas/data', {
+        scale: this.canvas.data.scale || 1,
+        lineName: this.canvas.data.lineName,
+        fromArrowType: this.canvas.data.fromArrowType,
+        toArrowType: this.canvas.data.toArrowType,
+        fromArrowlockedType: this.canvas.data.locked
+      })
+    },
+    handle_circle(data) {
+      this.canvas.data.toArrowType = 'circle'
+      this.$store.commit('canvas/data', {
+        scale: this.canvas.data.scale || 1,
+        lineName: this.canvas.data.lineName,
+        fromArrowType: this.canvas.data.fromArrowType,
+        toArrowType: this.canvas.data.toArrowType,
+        fromArrowlockedType: this.canvas.data.locked
+      })
+    },
+
+    handle_lineUp(data) {
+      this.canvas.data.toArrowType = 'lineUp'
+      this.$store.commit('canvas/data', {
+        scale: this.canvas.data.scale || 1,
+        lineName: this.canvas.data.lineName,
+        fromArrowType: this.canvas.data.fromArrowType,
+        toArrowType: this.canvas.data.toArrowType,
+        fromArrowlockedType: this.canvas.data.locked
+      })
+    },
+
+    handle_lineDown(data) {
+      this.canvas.data.toArrowType = 'lineDown'
       this.$store.commit('canvas/data', {
         scale: this.canvas.data.scale || 1,
         lineName: this.canvas.data.lineName,
