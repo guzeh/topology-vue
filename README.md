@@ -35,6 +35,10 @@ $ yarn start
 $ yarn generate
 ```
 
+# 贡献者
+
+- [详情列表](https://github.com/le5le-com/topology-vue/graphs/contributors)
+
 # 参与开发
 
 个人时间有限，此源码目前还不完整，欢迎一起参与开发：
