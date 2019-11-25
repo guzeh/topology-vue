@@ -48,28 +48,50 @@
         </el-submenu>
       </el-menu>
       <el-menu mode="horizontal" class="full" background-color="#f8f8f8"></el-menu>
-      <el-menu mode="horizontal" @select="onMenu" background-color="#f8f8f8">
+      <el-menu mode="horizontal" background-color="#f8f8f8">
         <el-menu-item>视图：{{scale}}%</el-menu-item>
-        <el-submenu index="help">
-          <template slot="title">默认连线类型：{{lineName}}</template>
-          <el-menu-item index="curve">曲线</el-menu-item>
-          <el-menu-item index="polyline">折线</el-menu-item>
-          <el-menu-item index="line">直线</el-menu-item>
+        <el-submenu index="state" title="默认连线类型">
+          <template slot="title">
+            <i :class="`iconfont icon-${lineName}`"></i>
+          </template>
+          <el-menu-item
+            v-for="(item, index) in lineNames"
+            :key="index"
+            :index="`line-${item}`"
+            @click="onState('lineName', item)"
+          >
+            <i :class="`iconfont icon-${item}`"></i>
+          </el-menu-item>
         </el-submenu>
       </el-menu>
-      <el-menu mode="horizontal" @select="onMenu" background-color="#f8f8f8">
-        <el-submenu index="help">
-          <template slot="title">默认终点箭头：{{toArrowType}}</template>
-          <el-menu-item index="noArrow">无箭头</el-menu-item>
-          <el-menu-item index="triangleSolid">实心三角形</el-menu-item>
-          <el-menu-item index="triangle">空心三角形</el-menu-item>
-          <el-menu-item index="diamondSolid">实心菱形</el-menu-item>
-          <el-menu-item index="diamond">空心菱形</el-menu-item>
-          <el-menu-item index="circleSolid">实心圆</el-menu-item>
-          <el-menu-item index="circle">空心圆</el-menu-item>
-          <el-menu-item index="line">线型箭头</el-menu-item>
-          <el-menu-item index="lineUp">上单边线箭头</el-menu-item>
-          <el-menu-item index="lineDown">下单边线箭头</el-menu-item>
+      <el-menu mode="horizontal" background-color="#f8f8f8">
+        <el-submenu index="state" title="默认起点箭头">
+          <template slot="title">
+            <i :class="`iconfont icon-from-${fromArrowType}`"></i>
+          </template>
+          <el-menu-item
+            v-for="(item, index) in arrowTypes"
+            :key="index"
+            :index="`fromArrow-${item}`"
+            @click="onState('fromArrowType', item)"
+          >
+            <i :class="`iconfont icon-from-${item}`"></i>
+          </el-menu-item>
+        </el-submenu>
+      </el-menu>
+      <el-menu mode="horizontal" background-color="#f8f8f8">
+        <el-submenu index="state" title="默认终点箭头">
+          <template slot="title">
+            <i :class="`iconfont icon-to-${toArrowType}`"></i>
+          </template>
+          <el-menu-item
+            v-for="(item, index) in arrowTypes"
+            :key="index"
+            :index="`toArrow-${item}`"
+            @click="onState('toArrowType', item)"
+          >
+            <i :class="`iconfont icon-to-${item}`"></i>
+          </el-menu-item>
         </el-submenu>
       </el-menu>
     </div>
@@ -128,7 +150,20 @@ export default {
     return {
       about: false,
       license: false,
-      joinin: false
+      joinin: false,
+      lineNames: ['curve', 'polyline', 'line'],
+      arrowTypes: [
+        '',
+        'triangleSolid',
+        'triangle',
+        'diamondSolid',
+        'diamond',
+        'circleSolid',
+        'circle',
+        'line',
+        'lineUp',
+        'lineDown'
+      ]
     }
   },
   computed: {
@@ -136,31 +171,13 @@ export default {
       return Math.floor(this.$store.state.canvas.data.scale * 100)
     },
     lineName() {
-      const lineNames = {
-        curve: '曲线',
-        polyline: '折线',
-        line: '直线'
-      }
-      return lineNames[this.$store.state.canvas.data.lineName]
+      return this.$store.state.canvas.data.lineName
+    },
+    fromArrowType() {
+      return this.$store.state.canvas.data.fromArrowType
     },
     toArrowType() {
-      const toArrowTypes = {
-        noArrow:'无箭头',
-        triangleSolid: '实心三角形',
-        triangle: '空心三角形',
-        diamondSolid: '实心菱形',
-        diamond:'空心菱形',
-        circleSolid:'实心圆',
-        circle:'空心圆',
-        line:'线型箭头',
-        lineUp:'上单边线箭头',
-        lineDown:'下单边线箭头'
-      }
-      if(this.$store.state.canvas.data.toArrowType.length==0){
-        return  toArrowTypes['noArrow']
-      }else {
-        return toArrowTypes[this.$store.state.canvas.data.toArrowType]
-      }
+      return this.$store.state.canvas.data.toArrowType
     }
   },
   methods: {
@@ -186,6 +203,15 @@ export default {
           })
           break
       }
+    },
+    onState(key, value) {
+      this.$store.commit('event/emit', {
+        name: 'state',
+        data: {
+          key,
+          value
+        }
+      })
     }
   }
 }
@@ -251,6 +277,11 @@ body {
   a {
     text-decoration: none;
     color: #314659;
+  }
+
+  .iconfont {
+    color: #314659;
+    font-size: 0.26rem;
   }
 }
 
