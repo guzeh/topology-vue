@@ -94,6 +94,21 @@
           </el-menu-item>
         </el-submenu>
       </el-menu>
+      <el-menu mode="horizontal" background-color="#f8f8f8">
+        <el-submenu index="user" v-if="user">
+          <template slot="title">
+            <el-avatar
+              src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"
+              :size="24"
+            ></el-avatar>
+            {{user.username}}
+          </template>
+          <el-menu-item @click="onSignOut">退出</el-menu-item>
+        </el-submenu>
+        <el-menu-item v-if="!user">
+          <a @click="onLogin">注册 / 登录</a>
+        </el-menu-item>
+      </el-menu>
     </div>
 
     <!-- body部分 -->
@@ -163,7 +178,8 @@ export default {
         'line',
         'lineUp',
         'lineDown'
-      ]
+      ],
+      user: null
     }
   },
   computed: {
@@ -178,6 +194,18 @@ export default {
     },
     toArrowType() {
       return this.$store.state.canvas.data.toArrowType
+    },
+    error() {
+      return this.$store.state.notice.error
+    }
+  },
+  watch: {
+    error(curVal) {
+      this.$notify({
+        title: '错误',
+        type: 'error',
+        message: curVal.text
+      })
     }
   },
   methods: {
@@ -212,7 +240,26 @@ export default {
           value
         }
       })
+    },
+    async getUser() {
+      if (this.$cookies.get('token')) {
+        this.user = await this.$axios.$get('/api/user/profile')
+      }
+    },
+    onLogin() {
+      if (process.client) {
+        location.href = `https://account.le5le.com?cb=${encodeURIComponent(
+          location.href
+        )}`
+      }
+    },
+    onSignOut() {
+      this.$cookies.remove('token')
+      this.user = null
     }
+  },
+  created() {
+    this.getUser()
   }
 }
 </script>
@@ -252,10 +299,12 @@ body {
     flex: 1;
   }
 
-  img {
-    height: 0.22rem;
-    position: relative;
-    top: -0.04rem;
+  .logo {
+    img {
+      height: 0.22rem;
+      position: relative;
+      top: -0.04rem;
+    }
   }
 }
 

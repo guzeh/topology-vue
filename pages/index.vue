@@ -32,7 +32,7 @@ import { Node } from 'topology-core/models/node'
 import { Line } from 'topology-core/models/line'
 import * as FileSaver from 'file-saver'
 
-import { Tools, canvasRegister } from './canvas.service'
+import { Tools, canvasRegister } from '~/utils/canvas.service'
 
 import CanvasProps from '~/components/CanvasProps'
 import CanvasContextMenu from '~/components/CanvasContextMenu'
