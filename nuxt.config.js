@@ -64,7 +64,8 @@ export default {
     proxy: true
   },
   proxy: {
-    '/api/': 'http://topology.le5le.com/'
+    '/api/': 'http://topology.le5le.com/',
+    '/image/': 'http://topology.le5le.com/'
   },
   /*
    ** Build configuration

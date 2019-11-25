@@ -1,414 +1,165 @@
 <template>
-  <div class="page">
-    <div class="tools">
-      <div v-for="(item, index) in tools" :key="index">
-        <div class="title">{{ item.group }}</div>
-        <div class="buttons">
-          <a
-            v-for="(btn, i) in item.children"
-            :key="i"
-            :title="btn.name"
-            :draggable="btn.data"
-            @dragstart="onDrag($event, btn)"
-          >
-            <i :class="`iconfont ${btn.icon}`"></i>
-          </a>
+  <div class="page-list">
+    <div>
+      <div class="nav">
+        <label>热门图文</label>
+      </div>
+      <div class="flex wrap">
+        <div
+          class="topo"
+          v-for="(item, index) of data.list"
+          :key="index"
+          :title="item.desc"
+          @click="onOpen(item)"
+        >
+          <div class="image">
+            <img :src="item.image" />
+          </div>
+          <div class="ph15 pv10">
+            <div class="title line one" :title="item.name">{{ item.name }}</div>
+            <div class="desc line two mt5" :title="item.desc">{{ item.desc }}</div>
+            <div class="flex mt5">
+              <div class="full flex middle">
+                <el-avatar
+                  src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg"
+                  :size="24"
+                ></el-avatar>
+                <span class="ml5">{{ item.username }}</span>
+              </div>
+              <div>
+                <span class="hover pointer mr15" title="赞">
+                  <i
+                    class="iconfont"
+                    :class="{'iconfont icon-appreciate':!item.stared, 'iconfont icon-appreciatefill':item.stared}"
+                  ></i>
+                  <span class="ml5">{{ item.star || 0 }}</span>
+                </span>
+                <span class="hover pointer" title="收藏">
+                  <i
+                    class="iconfont"
+                    :class="{'iconfont icon-like':!item.favorited, 'iconfont icon-likefill':item.favorited}"
+                  ></i>
+                  <span class="ml5">{{ item.hot || 0 }}</span>
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-    <div id="topology-canvas" class="full" @contextmenu="onContextMenu($event)"></div>
-    <div class="props">
-      <CanvasProps :props.sync="props" @change="onUpdateProps"></CanvasProps>
-    </div>
-    <div class="context-menu" v-if="contextmenu.left" :style="this.contextmenu">
-      <CanvasContextMenu :canvas="canvas" :props.sync="props"></CanvasContextMenu>
+      <div>
+        <el-pagination
+          @current-change="getList"
+          :current-page="search.pageIndex"
+          :page-size="8"
+          layout=" prev, pager, next, jumper, total"
+          :total="data.count"
+        ></el-pagination>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import { Topology } from 'topology-core'
-import { Node } from 'topology-core/models/node'
-import { Line } from 'topology-core/models/line'
-import * as FileSaver from 'file-saver'
-
-import { Tools, canvasRegister } from '~/utils/canvas.service'
-
-import CanvasProps from '~/components/CanvasProps'
-import CanvasContextMenu from '~/components/CanvasContextMenu'
-
 export default {
   data() {
     return {
-      tools: Tools,
-      canvas: {},
-      canvasOptions: {
-        rotateCursor: '/img/rotate.cur'
+      data: {
+        list: [],
+        count: 0
       },
-      props: {
-        node: null,
-        line: null,
-        nodes: null,
-        multi: false,
-        locked: false
-      },
-      contextmenu: {
-        left: null,
-        top: null,
-        bottom: null
-      }
-    }
-  },
-  components: {
-    CanvasProps,
-    CanvasContextMenu
-  },
-  computed: {
-    event() {
-      return this.$store.state.event.event
-    }
-  },
-  watch: {
-    event(curVal) {
-      if (this['handle_' + curVal.name]) {
-        this['handle_' + curVal.name](curVal.data)
+      search: {
+        pageIndex: 1,
+        pageCount: 8
       }
     }
   },
   created() {
-    canvasRegister()
-    if (process.client) {
-      document.onclick = event => {
-        this.contextmenu = {
-          left: null,
-          top: null,
-          bottom: null
-        }
-      }
-    }
-  },
-  mounted() {
-    this.canvasOptions.on = this.onMessage
-    this.canvas = new Topology('topology-canvas', this.canvasOptions)
+    this.getList()
   },
   methods: {
-    onDrag(event, node) {
-      event.dataTransfer.setData('Text', JSON.stringify(node.data))
-    },
-
-    onMessage(event, data) {
-      switch (event) {
-        case 'node':
-        case 'addNode':
-          this.props = {
-            node: data,
-            line: null,
-            multi: false,
-            nodes: null,
-            locked: data.locked
-          }
-          break
-        case 'line':
-        case 'addLine':
-          this.props = {
-            node: null,
-            line: data,
-            multi: false,
-            nodes: null,
-            locked: data.locked
-          }
-          break
-        case 'multi':
-          this.props = {
-            node: null,
-            line: null,
-            multi: true,
-            nodes: data.nodes.length > 1 ? data.nodes : null,
-            locked: this.getLocked(data)
-          }
-          break
-        case 'space':
-          this.props = {
-            node: null,
-            line: null,
-            multi: false,
-            nodes: null,
-            locked: false
-          }
-          break
-        case 'moveOut':
-          break
-        case 'moveNodes':
-        case 'resizeNodes':
-          if (data.length > 1) {
-            this.props = {
-              node: null,
-              line: null,
-              multi: true,
-              nodes: data,
-              locked: this.getLocked({ nodes: data })
-            }
-          } else {
-            this.props = {
-              node: data[0],
-              line: null,
-              multi: false,
-              nodes: null,
-              locked: false
-            }
-          }
-          break
-        case 'resize':
-        case 'scale':
-        case 'locked':
-          if (this.canvas && this.canvas.data) {
-            this.$store.commit('canvas/data', {
-              scale: this.canvas.data.scale || 1,
-              lineName: this.canvas.data.lineName,
-              fromArrowType: this.canvas.data.fromArrowType,
-              toArrowType: this.canvas.data.toArrowType,
-              fromArrowlockedType: this.canvas.data.locked
-            })
-          }
-          break
-      }
-    },
-
-    getLocked(data) {
-      let locked = true
-      if (data.nodes && data.nodes.length) {
-        for (const item of data.nodes) {
-          if (!item.locked) {
-            locked = false
-            break
-          }
-        }
-      }
-      if (locked && data.lines) {
-        for (const item of data.lines) {
-          if (!item.locked) {
-            locked = false
-            break
-          }
-        }
-      }
-
-      return locked
-    },
-
-    onUpdateProps(node) {
-      // 如果是node属性改变，需要传入node，重新计算node相关属性值
-      // 如果是line属性改变，无需传参
-      this.canvas.updateProps(node)
-    },
-
-    handle_new(data) {
-      this.canvas.open({ nodes: [], lines: [] })
-    },
-
-    handle_open(data) {
-      this.handle_replace(data)
-    },
-
-    handle_replace(data) {
-      const input = document.createElement('input')
-      input.type = 'file'
-      input.onchange = event => {
-        const elem = event.srcElement || event.target
-        if (elem.files && elem.files[0]) {
-          const name = elem.files[0].name.replace('.json', '')
-          const reader = new FileReader()
-          reader.onload = e => {
-            const text = e.target.result + ''
-            try {
-              const data = JSON.parse(text)
-              if (
-                data &&
-                Array.isArray(data.nodes) &&
-                Array.isArray(data.lines)
-              ) {
-                this.canvas.open(data)
-              }
-            } catch (e) {
-              return false
-            }
-          }
-          reader.readAsText(elem.files[0])
-        }
-      }
-      input.click()
-    },
-
-    handle_save(data) {
-      FileSaver.saveAs(
-        new Blob([JSON.stringify(this.canvas.data)], {
-          type: 'text/plain;charset=utf-8'
-        }),
-        `le5le.topology.json`
+    async getList() {
+      this.data = await this.$axios.$get(
+        `/api/topologies?pageIndex=${this.search.pageIndex}&pageCount=${this.search.pageCount}`
       )
     },
-
-    handle_savePng(data) {
-      this.canvas.saveAsImage('le5le.topology.png')
-    },
-
-    handle_saveSvg(data) {
-      const ctx = new C2S(
-        this.canvas.canvas.width + 200,
-        this.canvas.canvas.height + 200
-      )
-      for (const item of this.canvas.data.nodes) {
-        item.render(ctx)
-      }
-
-      for (const item of this.canvas.data.lines) {
-        item.render(ctx)
-      }
-
-      let mySerializedSVG = ctx.getSerializedSvg()
-      mySerializedSVG = mySerializedSVG.replace(
-        '<defs/>',
-        `<defs>
-    <style type="text/css">
-      @font-face {
-        font-family: 'topology';
-        src: url('http://at.alicdn.com/t/font_1331132_h688rvffmbc.ttf?t=1569311680797') format('truetype');
-      }
-    </style>
-  </defs>`
-      )
-
-      mySerializedSVG = mySerializedSVG.replace(/--le5le--/g, '&#x')
-
-      const urlObject = window.URL || window
-      const export_blob = new Blob([mySerializedSVG])
-      const url = urlObject.createObjectURL(export_blob)
-
-      const a = document.createElement('a')
-      a.setAttribute('download', 'le5le.topology.svg')
-      a.setAttribute('href', url)
-      const evt = document.createEvent('MouseEvents')
-      evt.initEvent('click', true, true)
-      a.dispatchEvent(evt)
-    },
-
-    handle_undo(data) {
-      this.canvas.undo()
-    },
-
-    handle_redo(data) {
-      this.canvas.redo()
-    },
-
-    handle_copy(data) {
-      this.canvas.copy()
-    },
-
-    handle_cut(data) {
-      this.canvas.cut()
-    },
-
-    handle_parse(data) {
-      this.canvas.parse()
-    },
-
-    handle_state(data) {
-      this.canvas.data[data.key] = data.value
-      this.$store.commit('canvas/data', {
-        scale: this.canvas.data.scale || 1,
-        lineName: this.canvas.data.lineName,
-        fromArrowType: this.canvas.data.fromArrowType,
-        toArrowType: this.canvas.data.toArrowType,
-        fromArrowlockedType: this.canvas.data.locked
-      })
-    },
-
-    onContextMenu(event) {
-      event.preventDefault()
-      event.stopPropagation()
-
-      if (event.clientY + 360 < document.body.clientHeight) {
-        this.contextmenu = {
-          left: event.clientX + 'px',
-          top: event.clientY + 'px'
-        }
-      } else {
-        this.contextmenu = {
-          left: event.clientX + 'px',
-          bottom: document.body.clientHeight - event.clientY + 'px'
-        }
-      }
+    onOpen(item) {
+      this.$router.push({ path: '/workspace', query: { id: item.id } })
     }
   }
 }
 </script>
 
 <style lang="scss">
-.page {
-  display: flex;
-  width: 100%;
+.page-list {
+  background-color: #e7e7e7;
+  width: 100vw;
   height: 100%;
+  padding: 0 0.3rem;
+  overflow: auto;
 
-  .tools {
-    flex-shrink: 0;
-    width: 1.75rem;
-    background-color: #f8f8f8;
-    border-right: 1px solid #d9d9d9;
-    overflow-y: auto;
+  .nav {
+    margin: 0.2rem 0.1rem 0.05rem 0.1rem;
+  }
 
-    .title {
-      color: #0d1a26;
-      font-weight: 600;
-      font-size: 0.12rem;
-      line-height: 1;
-      padding: 0.05rem 0.1rem;
-      margin-top: 0.08rem;
-      border-bottom: 1px solid #ddd;
+  & > div {
+    max-width: 12rem;
+    margin: auto;
+  }
+}
 
-      &:first-child {
-        border-top: none;
-      }
-    }
+.topo {
+  position: relative;
+  width: calc(25% - 0.2rem);
+  height: 3rem;
+  margin: 0.1rem;
+  border-radius: 2px;
+  background-color: #fff;
 
-    .buttons {
-      padding: 0.1rem 0;
-      a {
-        display: inline-block;
-        color: #314659;
-        line-height: 1;
-        width: 0.4rem;
-        height: 0.4rem;
-        text-align: center;
-        text-decoration: none !important;
+  .image {
+    padding: 0.1rem 0.1rem 0.15rem 0.1rem;
+    text-align: center;
+    height: 1.85rem;
+    border-bottom: 1px solid #f7f7f7;
+    cursor: pointer;
 
-        .iconfont {
-          font-size: 0.24rem;
-        }
-      }
+    img {
+      height: 100%;
+      max-width: 100%;
     }
   }
 
-  .full {
-    flex: 1;
-    width: initial;
-    position: relative;
-    overflow: auto;
-    background: #fff;
+  .title {
+    font-size: 0.16rem;
+    line-height: 0.24rem;
+    height: 0.24rem;
+    cursor: pointer;
   }
 
-  .props {
-    flex-shrink: 0;
-    width: 2.4rem;
-    padding: 0.1rem 0;
-    background-color: #f8f8f8;
-    border-left: 1px solid #d9d9d9;
-    overflow-y: auto;
-    position: relative;
+  .desc {
+    font-size: 0.12rem;
+    line-height: 0.16rem;
+    height: 0.32rem;
   }
 
-  .context-menu {
-    position: fixed;
-    z-index: 10;
+  .iconfont {
+    font-size: 0.16rem;
+  }
+
+  textarea {
+    &.input {
+      min-width: 0.3rem;
+      width: 100%;
+      max-width: 100%;
+      font-size: 0.1rem;
+      padding: 0.02rem 0.05rem;
+      resize: none;
+    }
+  }
+
+  .icon-delete {
+    position: absolute;
+    top: 0.05rem;
+    right: 0.1rem;
   }
 }
 </style>

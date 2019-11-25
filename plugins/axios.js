@@ -13,6 +13,8 @@ export default function({ $axios, app, redirect }) {
       app.store.commit('notice/error', {
         text: '请先登录！'
       })
+    } else if (code === 403) {
+      redirect('/')
     } else if (code === 500) {
       app.store.commit('notice/error', {
         text: error.response.error || '服务错误，请稍后重试！'

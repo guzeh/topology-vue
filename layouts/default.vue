@@ -215,6 +215,17 @@ export default {
       }
 
       switch (key) {
+        case 'new':
+          this.$router.push('/workspace')
+          break
+        case 'open':
+          this.$router.push('/workspace')
+          setTimeout(() => {
+            this.$store.commit('event/emit', {
+              name: key
+            })
+          }, 100)
+          break
         case 'about':
         case 'about2':
           this.about = true
