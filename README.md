@@ -1,10 +1,12 @@
+喜欢，请到这里给我们投一票：https://www.oschina.net/project/top_cn_2019?utm_source=projectdetail 。（开发工具栏，或下滑网页搜索：Topology）
+
 # topology-vue
 
 这是[le5le-topology](http://topology.le5le.com) 的 vue 示例教程源码。
 
 - [官网源码](https://github.com/le5le-com/topology)
 
-- [开发教程](https://juejin.im/post/5dcc074151882559c8061905)
+- [开发教程](https://juejin.im/post/5dd73e85518825731c34b2ca)
 - [API 文档](https://www.yuque.com/alsmile/topology)
 
 # 使用技术
@@ -32,6 +34,10 @@ $ yarn start
 # generate static project
 $ yarn generate
 ```
+
+# 贡献者
+
+- [详情列表](https://github.com/le5le-com/topology-vue/graphs/contributors)
 
 # 参与开发
 

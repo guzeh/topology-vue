@@ -1,193 +1,165 @@
 <template>
-  <div class="page">
-    <div class="tools">
-      <div v-for="(item, index) in tools" :key="index">
-        <div class="title">{{ item.group }}</div>
-        <div class="buttons">
-          <a
-            v-for="(btn, i) in item.children"
-            :key="i"
-            :title="btn.name"
-            :draggable="btn.data"
-            @dragstart="onDrag($event, btn)"
-          >
-            <i :class="`iconfont ${btn.icon}`"></i>
-          </a>
+  <div class="page-list">
+    <div>
+      <div class="nav">
+        <label>热门图文</label>
+      </div>
+      <div class="flex wrap">
+        <div
+          class="topo"
+          v-for="(item, index) of data.list"
+          :key="index"
+          :title="item.desc"
+          @click="onOpen(item)"
+        >
+          <div class="image">
+            <img :src="item.image" />
+          </div>
+          <div class="ph15 pv10">
+            <div class="title line one" :title="item.name">{{ item.name }}</div>
+            <div class="desc line two mt5" :title="item.desc">{{ item.desc }}</div>
+            <div class="flex mt5">
+              <div class="full flex middle">
+                <el-avatar
+                  src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg"
+                  :size="24"
+                ></el-avatar>
+                <span class="ml5">{{ item.username }}</span>
+              </div>
+              <div>
+                <span class="hover pointer mr15" title="赞">
+                  <i
+                    class="iconfont"
+                    :class="{'iconfont icon-appreciate':!item.stared, 'iconfont icon-appreciatefill':item.stared}"
+                  ></i>
+                  <span class="ml5">{{ item.star || 0 }}</span>
+                </span>
+                <span class="hover pointer" title="收藏">
+                  <i
+                    class="iconfont"
+                    :class="{'iconfont icon-like':!item.favorited, 'iconfont icon-likefill':item.favorited}"
+                  ></i>
+                  <span class="ml5">{{ item.hot || 0 }}</span>
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-    <div id="topology-canvas" class="full"></div>
-    <div class="props">
-      <CanvasProps :props.sync="props" @change="onUpdateProps"></CanvasProps>
+      <div>
+        <el-pagination
+          @current-change="getList"
+          :current-page="search.pageIndex"
+          :page-size="8"
+          layout=" prev, pager, next, jumper, total"
+          :total="data.count"
+        ></el-pagination>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import { Topology } from 'topology-core'
-import { Node } from 'topology-core/models/node'
-import { Line } from 'topology-core/models/line'
-import * as FileSaver from 'file-saver'
-
-import { Tools, canvasRegister } from './canvas.service'
-
-import CanvasProps from '~/components/CanvasProps'
-
 export default {
   data() {
     return {
-      tools: Tools,
-      canvas: {},
-      canvasOptions: {
-        rotateCursor: '/img/rotate.cur'
+      data: {
+        list: [],
+        count: 0
       },
-      props: {
-        node: null,
-        line: null,
-        multi: false
+      search: {
+        pageIndex: 1,
+        pageCount: 8
       }
     }
   },
-  components: {
-    CanvasProps
-  },
   created() {
-    canvasRegister()
-  },
-  mounted() {
-    this.canvasOptions.on = this.onMessage
-    this.canvas = new Topology('topology-canvas', this.canvasOptions)
+    this.getList()
   },
   methods: {
-    onDrag(event, node) {
-      event.dataTransfer.setData('Text', JSON.stringify(node.data))
+    async getList() {
+      this.data = await this.$axios.$get(
+        `/api/topologies?pageIndex=${this.search.pageIndex}&pageCount=${this.search.pageCount}`
+      )
     },
-    onMessage(event, data) {
-      switch (event) {
-        case 'node':
-        case 'addNode':
-          this.props = {
-            node: data,
-            line: null,
-            multi: false
-          }
-          break
-        case 'line':
-        case 'addLine':
-          this.props = {
-            node: null,
-            line: data,
-            multi: false
-          }
-          break
-        case 'multi':
-          this.props = {
-            node: null,
-            line: null,
-            multi: true
-          }
-          break
-        case 'space':
-          this.props = {
-            node: null,
-            line: null,
-            multi: false
-          }
-          break
-        case 'moveOut':
-          break
-        case 'moveNodes':
-        case 'resizeNodes':
-          if (data.length > 1) {
-            this.props = {
-              node: null,
-              line: null,
-              multi: true
-            }
-          } else {
-            this.props = {
-              node: data[0],
-              line: null,
-              multi: false
-            }
-          }
-          break
-        case 'resize':
-        case 'scale':
-        case 'locked':
-          if (this.canvas) {
-          }
-          break
-      }
-    },
-    onUpdateProps(node) {
-      this.canvas.updateProps(node)
+    onOpen(item) {
+      this.$router.push({ path: '/workspace', query: { id: item.id } })
     }
   }
 }
 </script>
 
 <style lang="scss">
-.page {
-  display: flex;
-  width: 100%;
+.page-list {
+  background-color: #e7e7e7;
+  width: 100vw;
   height: 100%;
+  padding: 0 0.3rem;
+  overflow: auto;
 
-  .tools {
-    flex-shrink: 0;
-    width: 1.75rem;
-    background-color: #f8f8f8;
-    border-right: 1px solid #d9d9d9;
-    overflow-y: auto;
+  .nav {
+    margin: 0.2rem 0.1rem 0.05rem 0.1rem;
+  }
 
-    .title {
-      color: #0d1a26;
-      font-weight: 600;
-      font-size: 0.12rem;
-      line-height: 1;
-      padding: 0.05rem 0.1rem;
-      margin-top: 0.08rem;
-      border-bottom: 1px solid #ddd;
+  & > div {
+    max-width: 12rem;
+    margin: auto;
+  }
+}
 
-      &:first-child {
-        border-top: none;
-      }
-    }
+.topo {
+  position: relative;
+  width: calc(25% - 0.2rem);
+  height: 3rem;
+  margin: 0.1rem;
+  border-radius: 2px;
+  background-color: #fff;
 
-    .buttons {
-      padding: 0.1rem 0;
-      a {
-        display: inline-block;
-        color: #314659;
-        line-height: 1;
-        width: 0.4rem;
-        height: 0.4rem;
-        text-align: center;
-        text-decoration: none !important;
+  .image {
+    padding: 0.1rem 0.1rem 0.15rem 0.1rem;
+    text-align: center;
+    height: 1.85rem;
+    border-bottom: 1px solid #f7f7f7;
+    cursor: pointer;
 
-        .iconfont {
-          font-size: 0.24rem;
-        }
-      }
+    img {
+      height: 100%;
+      max-width: 100%;
     }
   }
 
-  .full {
-    flex: 1;
-    width: initial;
-    position: relative;
-    overflow: auto;
-    background: #fff;
+  .title {
+    font-size: 0.16rem;
+    line-height: 0.24rem;
+    height: 0.24rem;
+    cursor: pointer;
   }
 
-  .props {
-    flex-shrink: 0;
-    width: 2.4rem;
-    padding: 0.1rem 0;
-    background-color: #f8f8f8;
-    border-left: 1px solid #d9d9d9;
-    overflow-y: auto;
-    position: relative;
+  .desc {
+    font-size: 0.12rem;
+    line-height: 0.16rem;
+    height: 0.32rem;
+  }
+
+  .iconfont {
+    font-size: 0.16rem;
+  }
+
+  textarea {
+    &.input {
+      min-width: 0.3rem;
+      width: 100%;
+      max-width: 100%;
+      font-size: 0.1rem;
+      padding: 0.02rem 0.05rem;
+      resize: none;
+    }
+  }
+
+  .icon-delete {
+    position: absolute;
+    top: 0.05rem;
+    right: 0.1rem;
   }
 }
 </style>
